@@ -16,7 +16,7 @@ import {
   WeekNum,
 } from '../interfaces'
 import { useTheme } from '../theme/ThemeContext'
-import { typedMemo } from '../utils'
+import { getEventMap, typedMemo } from '../utils'
 import { CalendarEventForMonthView } from './CalendarEventForMonthView'
 import { getWeeksWithAdjacentMonths } from '..'
 
@@ -90,24 +90,18 @@ function _CalendarBodyForMonthView<T extends ICalendarEventBase>({
     [calendarCellTextStyle],
   )
 
+  const eventMap = getEventMap<T>(events);
+
   const sortedEvents = React.useCallback(
     (day: dayjs.Dayjs) => {
-      return sortedMonthView
-        ? events
-            .filter(({ start, end }) =>
-              day.isBetween(dayjs(start).startOf('day'), dayjs(end).endOf('day'), null, '[)'),
-            )
-            .sort((a, b) => {
-              if (dayjs(a.start).isSame(b.start, 'day')) {
-                const aDuration = dayjs.duration(dayjs(a.end).diff(dayjs(a.start))).days()
-                const bDuration = dayjs.duration(dayjs(b.end).diff(dayjs(b.start))).days()
-                return bDuration - aDuration
-              }
-              return a.start.getTime() - b.start.getTime()
-            })
-        : events.filter(({ start, end }) =>
-            day.isBetween(dayjs(start).startOf('day'), dayjs(end).endOf('day'), null, '[)'),
-          )
+      const events = eventMap.get(dayjs(day).startOf('day').format()) || [];
+      if (sortedMonthView) {
+        const ret = events.sort((a: ICalendarEventBase, b: ICalendarEventBase) => {
+          return dayjs(a.start).diff(b.start);
+        });
+        return ret;
+      }
+      return events;
     },
     [events, sortedMonthView],
   )
@@ -183,8 +177,8 @@ function _CalendarBodyForMonthView<T extends ICalendarEventBase>({
                           date?.format('YYYY-MM-DD') === now.format('YYYY-MM-DD')
                             ? theme.palette.primary.main
                             : date?.month() !== targetDate.month()
-                            ? theme.palette.gray['500']
-                            : theme.palette.gray['800'],
+                              ? theme.palette.gray['500']
+                              : theme.palette.gray['800'],
                       },
                       {
                         ...getCalendarCellTextStyle(date?.toDate(), i),
