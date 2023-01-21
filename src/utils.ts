@@ -239,10 +239,10 @@ export function getEventSpanningInfo(
     !showAdjacentMonths && monthDaysLeft < 7 && monthDaysLeft < eventDuration
       ? monthDaysLeft + 1
       : eventDaysLeft > weekDaysLeft
-        ? weekDaysLeft
-        : eventDaysLeft < eventDuration
-          ? eventDaysLeft
-          : eventDuration
+      ? weekDaysLeft
+      : eventDaysLeft < eventDuration
+      ? eventDaysLeft
+      : eventDuration
   const isMultipleDaysStart =
     isMultipleDays &&
     (date.isSame(event.start, 'day') ||
@@ -284,42 +284,42 @@ export function getWeeksWithAdjacentMonths(targetDate: dayjs.Dayjs, weekStartsOn
 }
 
 export function getEventMap<T extends ICalendarEventBase>(events: Array<T>) {
-  const eventMap = new Map<string, Array<T>>();
+  const eventMap = new Map<string, Array<T>>()
   events.forEach((event) => {
-    const { start, end } = event;
-    let startDayjs = dayjs(start);
-    const endDayjs = dayjs(end);
+    const { start, end } = event
+    let startDayjs = dayjs(start)
+    const endDayjs = dayjs(end)
 
     while (startDayjs <= endDayjs) {
-      let eventToAdd;
-      const morning = startDayjs.startOf('day').format();
-      const tomorrowMorning = startDayjs.add(1, 'day').startOf('day');
+      let eventToAdd
+      const morning = startDayjs.startOf('day').format()
+      const tomorrowMorning = startDayjs.add(1, 'day').startOf('day')
 
       // if event spans over to next day, split event at midnight
       if (tomorrowMorning > endDayjs) {
         eventToAdd = {
           ...event,
-          start: startDayjs,
-          end: endDayjs,
-        };
+          start: startDayjs.toDate(),
+          end: endDayjs.toDate(),
+        }
       } else {
         eventToAdd = {
           ...event,
-          start: startDayjs,
-          end: tomorrowMorning,
-        };
+          start: startDayjs.toDate(),
+          end: tomorrowMorning.toDate(),
+        }
       }
 
       if (!eventMap.has(morning)) {
-        eventMap.set(morning, [eventToAdd]);
+        eventMap.set(morning, [eventToAdd])
       } else {
-        const array = eventMap.get(morning) || [];
-        array.push(eventToAdd);
+        const array = eventMap.get(morning) || []
+        array.push(eventToAdd)
       }
 
-      startDayjs = tomorrowMorning;
+      startDayjs = tomorrowMorning
     }
-  });
+  })
 
-  return eventMap;
+  return eventMap
 }
