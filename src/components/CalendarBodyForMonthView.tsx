@@ -90,20 +90,20 @@ function _CalendarBodyForMonthView<T extends ICalendarEventBase>({
     [calendarCellTextStyle],
   )
 
-  const eventMap = getEventMap<T>(events);
+  const eventMap = getEventMap<T>(events)
 
   const sortedEvents = React.useCallback(
     (day: dayjs.Dayjs) => {
-      const events = eventMap.get(dayjs(day).startOf('day').format()) || [];
+      const events = eventMap.get(dayjs(day).startOf('day').format()) || []
       if (sortedMonthView) {
         const ret = events.sort((a: ICalendarEventBase, b: ICalendarEventBase) => {
-          return dayjs(a.start).diff(b.start);
-        });
-        return ret;
+          return a.start.valueOf() - b.start.valueOf()
+        })
+        return ret
       }
-      return events;
+      return events
     },
-    [events, sortedMonthView],
+    [sortedMonthView, eventMap],
   )
 
   return (
@@ -177,8 +177,8 @@ function _CalendarBodyForMonthView<T extends ICalendarEventBase>({
                           date?.format('YYYY-MM-DD') === now.format('YYYY-MM-DD')
                             ? theme.palette.primary.main
                             : date?.month() !== targetDate.month()
-                              ? theme.palette.gray['500']
-                              : theme.palette.gray['800'],
+                            ? theme.palette.gray['500']
+                            : theme.palette.gray['800'],
                       },
                       {
                         ...getCalendarCellTextStyle(date?.toDate(), i),

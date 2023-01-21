@@ -4,7 +4,7 @@ import { Text, TouchableOpacity } from 'react-native'
 
 import { CalendarTouchableOpacityProps, ICalendarEventBase } from '../interfaces'
 import { useTheme } from '../theme/ThemeContext'
-import { formatStartEnd } from '../utils'
+import { formatStartEnd, getDateDiffMinutes } from '../utils'
 
 interface DefaultCalendarEventRendererProps<T extends ICalendarEventBase> {
   touchableOpacityProps: CalendarTouchableOpacityProps
@@ -27,7 +27,7 @@ export function DefaultCalendarEventRenderer<T extends ICalendarEventBase>({
 
   return (
     <TouchableOpacity {...touchableOpacityProps}>
-      {dayjs(event.end).diff(event.start, 'minute') < 32 && showTime ? (
+      {getDateDiffMinutes(event.start, event.end) < 32 && showTime ? (
         <Text style={eventTitleStyle}>
           {event.title},
           <Text style={eventTimeStyle}>
