@@ -59,7 +59,8 @@ typings/
 
 # next.js build output
 .next
-build
+build/*
+!build/index.js
 .jest
 .storybook-build
 /.idea
