@@ -1,11 +1,12 @@
 import { storiesOf } from '@storybook/react'
+import { ICalendarEventBase } from 'build'
 import dayjs from 'dayjs'
 import React from 'react'
 import { Alert, Text, TouchableOpacity, View } from 'react-native'
 
 import { Calendar, EventRenderer } from '../src'
 import { AppHeader, HEADER_HEIGHT } from './components/AppHeader'
-import { events } from './events'
+import { events, events3months } from './events'
 import { useEvents } from './hooks'
 import { styles } from './styles'
 
@@ -46,6 +47,11 @@ storiesOf('showcase - Mobile', module)
       <Calendar hideHours height={MOBILE_HEIGHT} events={events} />
     </View>
   ))
+  .add('week mode - big data', () => (
+    <View style={styles.mobile}>
+      <Calendar hideHours height={MOBILE_HEIGHT} events={events3months} />
+    </View>
+  ))
   .add('Month mode', () => {
     const state = useEvents(events)
     return (
@@ -56,6 +62,21 @@ storiesOf('showcase - Mobile', module)
           events={state.events}
           onPressEvent={(event) => alert(event.title)}
           onPressCell={state.addEvent}
+        />
+      </View>
+    )
+  })
+  .add('Month mode - big data', () => {
+    const state = useEvents(events3months)
+    return (
+      <View style={styles.mobile}>
+        <Calendar
+          mode="month"
+          height={MOBILE_HEIGHT}
+          events={state.events}
+          onPressEvent={(event) => alert(event.title)}
+          onPressCell={state.addEvent}
+          sortedMonthView
         />
       </View>
     )

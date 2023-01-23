@@ -88,8 +88,7 @@ export function getRelativeTopInDay(date: dayjs.Dayjs) {
 }
 
 export function todayInMinutes() {
-  const today = dayjs()
-  return today.diff(dayjs().startOf('day'), 'minute')
+  return getDateDiffMinutes(new Date(), dayjs().startOf('day').toDate())
 }
 
 export function modeToNum(mode: Mode, current?: dayjs.Dayjs | Date): number {
@@ -217,6 +216,18 @@ function weekDaysCount(weekStartsOn: WeekNum, weekEndsOn: WeekNum) {
   return 1
 }
 
+export function getDateDiffMinutes(a: Date, b: Date) {
+  const ret = (a.valueOf() - b.valueOf()) / 1000 / 60
+  if (ret >= 0) return ret
+  return -ret
+}
+
+export function getDateDiffDays(a: Date, b: Date) {
+  const ret = (a.valueOf() - b.valueOf()) / 1000 / 60 / 60 / 24
+  if (ret >= 0) return ret
+  return -ret
+}
+
 export function getEventSpanningInfo(
   event: ICalendarEventBase,
   date: dayjs.Dayjs,
@@ -227,9 +238,8 @@ export function getEventSpanningInfo(
   const dayWidth = calendarWidth / 7
 
   // adding + 1 because durations start at 0
-  const eventDuration =
-    Math.floor(dayjs.duration(dayjs(event.end).diff(dayjs(event.start))).asDays()) + 1
-  const eventDaysLeft = Math.floor(dayjs.duration(dayjs(event.end).diff(date)).asDays()) + 1
+  const eventDuration = Math.floor(getDateDiffDays(event.start, event.end)) + 1
+  const eventDaysLeft = Math.floor(getDateDiffDays(event.end, date.toDate())) + 1
   const weekDaysLeft = 7 - dayOfTheWeek
   const monthDaysLeft = date.endOf('month').date() - date.date()
   // console.log(dayOfTheWeek === 0 && !showAdjacentMonths && monthDaysLeft < 7)
@@ -281,4 +291,45 @@ export function getWeeksWithAdjacentMonths(targetDate: dayjs.Dayjs, weekStartsOn
   })
 
   return weeks
+}
+
+export function getEventMap<T extends ICalendarEventBase>(events: Array<T>) {
+  const eventMap = new Map<string, Array<T>>()
+  events.forEach((event) => {
+    const { start, end } = event
+    let startDayjs = dayjs(start)
+    const endDayjs = dayjs(end)
+
+    while (startDayjs <= endDayjs) {
+      let eventToAdd
+      const morning = startDayjs.startOf('day').format()
+      const tomorrowMorning = startDayjs.add(1, 'day').startOf('day')
+
+      // if event spans over to next day, split event at midnight
+      if (tomorrowMorning > endDayjs) {
+        eventToAdd = {
+          ...event,
+          start: startDayjs.toDate(),
+          end: endDayjs.toDate(),
+        }
+      } else {
+        eventToAdd = {
+          ...event,
+          start: startDayjs.toDate(),
+          end: tomorrowMorning.toDate(),
+        }
+      }
+
+      if (!eventMap.has(morning)) {
+        eventMap.set(morning, [eventToAdd])
+      } else {
+        const array = eventMap.get(morning) || []
+        array.push(eventToAdd)
+      }
+
+      startDayjs = tomorrowMorning
+    }
+  })
+
+  return eventMap
 }

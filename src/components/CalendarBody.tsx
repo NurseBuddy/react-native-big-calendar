@@ -13,14 +13,7 @@ import {
   ICalendarEventBase,
 } from '../interfaces'
 import { useTheme } from '../theme/ThemeContext'
-import {
-  getCountOfEventsAtEvent,
-  getOrderOfEvent,
-  getRelativeTopInDay,
-  hours,
-  isToday,
-  typedMemo,
-} from '../utils'
+import { getEventMap, getRelativeTopInDay, hours, isToday, typedMemo } from '../utils'
 import { CalendarEvent } from './CalendarEvent'
 import { HourGuideCell } from './HourGuideCell'
 import { HourGuideColumn } from './HourGuideColumn'
@@ -117,6 +110,8 @@ function _CalendarBody<T extends ICalendarEventBase>({
     [onPressCell],
   )
 
+  const eventMap = React.useMemo(() => getEventMap<T>(events), [events])
+
   const _renderMappedEvent = React.useCallback(
     (event: T, index: number) => {
       return (
@@ -126,15 +121,13 @@ function _CalendarBody<T extends ICalendarEventBase>({
           onPressEvent={onPressEvent}
           eventCellStyle={eventCellStyle}
           showTime={showTime}
-          eventCount={getCountOfEventsAtEvent(event, events)}
-          eventOrder={getOrderOfEvent(event, events)}
           overlapOffset={overlapOffset}
           renderEvent={renderEvent}
           ampm={ampm}
         />
       )
     },
-    [ampm, eventCellStyle, events, onPressEvent, overlapOffset, renderEvent, showTime],
+    [ampm, eventCellStyle, onPressEvent, overlapOffset, renderEvent, showTime],
   )
 
   const theme = useTheme()
@@ -189,44 +182,7 @@ function _CalendarBody<T extends ICalendarEventBase>({
               ))}
 
               {/* Render events of this date */}
-              {/* M  T  (W)  T  F  S  S */}
-              {/*       S-E             */}
-              {events
-                .filter(({ start }) =>
-                  dayjs(start).isBetween(date.startOf('day'), date.endOf('day'), null, '[)'),
-                )
-                .map(_renderMappedEvent)}
-
-              {/* Render events which starts before this date and ends on this date */}
-              {/* M  T  (W)  T  F  S  S */}
-              {/* S------E              */}
-              {events
-                .filter(
-                  ({ start, end }) =>
-                    dayjs(start).isBefore(date.startOf('day')) &&
-                    dayjs(end).isBetween(date.startOf('day'), date.endOf('day'), null, '[)'),
-                )
-                .map((event) => ({
-                  ...event,
-                  start: dayjs(event.end).startOf('day'),
-                }))
-                .map(_renderMappedEvent)}
-
-              {/* Render events which starts before this date and ends after this date */}
-              {/* M  T  (W)  T  F  S  S */}
-              {/*    S-------E          */}
-              {events
-                .filter(
-                  ({ start, end }) =>
-                    dayjs(start).isBefore(date.startOf('day')) &&
-                    dayjs(end).isAfter(date.endOf('day')),
-                )
-                .map((event) => ({
-                  ...event,
-                  start: dayjs(event.end).startOf('day'),
-                  end: dayjs(event.end).endOf('day'),
-                }))
-                .map(_renderMappedEvent)}
+              {(eventMap.get(date.startOf('day').format()) || []).map(_renderMappedEvent)}
 
               {isToday(date) && !hideNowIndicator && (
                 <View
